@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+        android:key="@string/search_pref_key"
+        android:title="@string/search_prefernce"
+        android:dialogTitle="@string/search_prefernce"
+        android:entries="@array/search_pref_entries"
+        android:summary="%s"
+        android:entryValues="@array/search_pref_values"
+        android:defaultValue="@string/top_rated_path" />
+
+</PreferenceScreen>
