@@ -1,22 +1,22 @@
 <resources>
     <string name="app_name">PopularMoviesNano</string>
     <string name="action_settings">Settings</string>
-    <string name="top_rated_path">vote_average.desc</string>
-    <string name="most_popular_path">popularity.desc</string>
+    <string name="top_rated_path">top_rated</string>
+    <string name="most_popular_path">popular</string>
 
     <string name="main_top_rated">Top Rated Movies</string>
     <string name="main_most_popular">Most Popular Movies</string>
 
     <string name="search_pref_key">querySetting</string>
 
-    <string name="api_key"></string>
+    <string name="api_key">f270fbd0c53229988b37dabad5553e19</string>
 
     <string name="error">Failed to load movies :(</string>
-    <string name="error_detail">Failed to load poster : (</string>
+    <string name="error_detail">Failed to load poster :(</string>
     <string name="title_activity_settings">Settings</string>
     <string name="title_activity_movie_detail"></string>
 
-    <string name="search_prefernce">Set search preference</string>
+    <string name="search_preference">Set search preference</string>
 
     <array name="search_pref_entries">
         <item>Top Rated</item>
@@ -24,7 +24,7 @@
     </array>
 
     <array name="search_pref_values">
-        <item>vote_average.desc</item>
-        <item>popularity.desc</item>
+        <item>top_rated</item>
+        <item>popular</item>
     </array>
 </resources>

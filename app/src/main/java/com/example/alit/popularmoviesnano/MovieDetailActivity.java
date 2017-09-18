@@ -28,6 +28,8 @@ import com.squareup.picasso.Target;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import static com.example.alit.popularmoviesnano.R.id.toolbar_layout;
+
 public class MovieDetailActivity extends AppCompatActivity {
 
     private static final String size = "w780";
@@ -45,7 +47,7 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     @BindView(R.id.app_bar) AppBarLayout appBarLayout;
 
-    @BindView(R.id.toolbar_layout) CollapsingToolbarLayout toolbar_layout;
+    @BindView(toolbar_layout) CollapsingToolbarLayout toolbarLayout;
 
     @BindView(R.id.progressBar) ProgressBar progressBar;
 
@@ -134,9 +136,9 @@ public class MovieDetailActivity extends AppCompatActivity {
             public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
 
                 if (Math.abs(verticalOffset) == appBarLayout.getTotalScrollRange()) {
-                    toolbar_layout.setTitle(title);
+                    toolbarLayout.setTitle(title);
                 }
-                else toolbar_layout.setTitle(" ");
+                else toolbarLayout.setTitle(" ");
             }
         });
 

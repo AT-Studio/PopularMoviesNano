@@ -16,6 +16,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
 
     private static final String SCHEME = "https";
     private static final String AUTHORITY = "api.themoviedb.org";
-    private static final String PATH = "3/discover/movie";
+    private static final String PATH = "3/movie";
     private static final String SORT_PARAM = "sort_by";
     private static final String API_PARAM = "api_key";
 
@@ -48,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
     private static final String OVERVIEW = "overview";
     private static final String VOTE_AVERAGE = "vote_average";
     private static final String RELEASE_DATE = "release_date";
+
+    private static final int posterWidth = 342;
 
     private static final String TAG = "MainActivity";
 
@@ -75,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
 
         ButterKnife.bind(this);
 
-        layoutManager = new GridLayoutManager(this, 4);
+        layoutManager = new GridLayoutManager(this, getNumColumns());
         moviesRecyclerView.setLayoutManager(layoutManager);
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -113,6 +116,16 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
 
     }
 
+    public int getNumColumns() {
+
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int numColumns = displayMetrics.widthPixels / posterWidth;
+        if (numColumns < 2) numColumns = 2;
+        return numColumns;
+
+    }
+
     public void getMovieData() {
         new FetchMovieData().execute(getURL());
     }
@@ -124,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
         builder.scheme(SCHEME)
                 .authority(AUTHORITY)
                 .path(PATH)
-                .appendQueryParameter(SORT_PARAM, querySetting)
+                .appendPath(querySetting)
                 .appendQueryParameter(API_PARAM, getResources().getString(R.string.api_key));
 
         Uri uri = builder.build();
@@ -263,24 +276,6 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
             }
 
         }
-    }
-
-    public class MovieListItem {
-
-        String title;
-        String posterURL;
-        String plotSummary;
-        float userRating;
-        String releaseDate;
-
-        public MovieListItem(String title, String posterURL, String plotSummary, float userRating, String releaseDate) {
-            this.title = title;
-            this.posterURL = posterURL;
-            this.plotSummary = plotSummary;
-            this.userRating = userRating;
-            this.releaseDate = releaseDate;
-        }
-
     }
 
     @Override

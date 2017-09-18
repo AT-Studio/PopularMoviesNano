@@ -3,8 +3,8 @@
 
     <ListPreference
         android:key="@string/search_pref_key"
-        android:title="@string/search_prefernce"
-        android:dialogTitle="@string/search_prefernce"
+        android:title="@string/search_preference"
+        android:dialogTitle="@string/search_preference"
         android:entries="@array/search_pref_entries"
         android:summary="%s"
         android:entryValues="@array/search_pref_values"

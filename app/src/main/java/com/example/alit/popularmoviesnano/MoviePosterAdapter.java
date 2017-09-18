@@ -1,6 +1,8 @@
 package com.example.alit.popularmoviesnano;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -28,10 +30,15 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
     private final String size = "w342";
     private final String baseUrl = "http://image.tmdb.org/t/p/" + size + "/";
 
+    Drawable loadingDrawable;
+    Drawable errorDrawable;
+
     public MoviePosterAdapter(ArrayList<String> posterURls, MoviePosterItemClickListener clickListener) {
         this.posterURLs = posterURls;
         this.clickListener = clickListener;
         this.context = (AppCompatActivity) clickListener;
+        this.loadingDrawable = ContextCompat.getDrawable(context, R.drawable.cloud_loading);
+        this.errorDrawable = ContextCompat.getDrawable(context, R.drawable.poster_error_sad);
     }
 
     @Override
@@ -45,7 +52,10 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
     @Override
     public void onBindViewHolder(MovieViewHolder holder, int position) {
 
-        Picasso.with(context).load(baseUrl + posterURLs.get(position)).into(holder.posterImageView);
+        Picasso.with(context).load(baseUrl + posterURLs.get(position))
+                .placeholder(loadingDrawable)
+                .error(errorDrawable)
+                .into(holder.posterImageView);
 
     }
 
