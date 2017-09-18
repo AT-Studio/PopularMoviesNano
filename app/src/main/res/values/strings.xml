@@ -9,7 +9,7 @@
 
     <string name="search_pref_key">querySetting</string>
 
-    <string name="api_key">f270fbd0c53229988b37dabad5553e19</string>
+    <string name="api_key"></string>
 
     <string name="error">Failed to load movies :(</string>
     <string name="error_detail">Failed to load poster :(</string>
