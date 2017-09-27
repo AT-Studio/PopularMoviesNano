@@ -1,30 +1,29 @@
 <resources>
     <string name="app_name">PopularMoviesNano</string>
     <string name="action_settings">Settings</string>
-    <string name="top_rated_path">top_rated</string>
-    <string name="most_popular_path">popular</string>
+    <string name="top_rated_path" translatable="false">top_rated</string>
+    <string name="most_popular_path" translatable="false">popular</string>
 
     <string name="main_top_rated">Top Rated Movies</string>
     <string name="main_most_popular">Most Popular Movies</string>
 
-    <string name="search_pref_key">querySetting</string>
+    <string name="search_pref_key" translatable="false">querySetting</string>
 
-    <string name="api_key">f270fbd0c53229988b37dabad5553e19</string>
+    <string name="api_key" translatable="false"></string>
 
     <string name="error">Failed to load movies :(</string>
     <string name="error_detail">Failed to load poster :(</string>
+
     <string name="title_activity_settings">Settings</string>
     <string name="title_activity_movie_detail"></string>
 
     <string name="search_preference">Set search preference</string>
 
-    <array name="search_pref_entries">
-        <item>Top Rated</item>
-        <item>Most Popular</item>
-    </array>
+    <string name="top_rated_pref">Top Rated</string>
+    <string name="most_popular_pref">Most Popular</string>
 
-    <array name="search_pref_values">
-        <item>top_rated</item>
-        <item>popular</item>
-    </array>
+    <string name="detail_title_label">Title</string>
+    <string name="detail_release_date_label">Release Date</string>
+    <string name="detail_rating_label">Rating</string>
+
 </resources>

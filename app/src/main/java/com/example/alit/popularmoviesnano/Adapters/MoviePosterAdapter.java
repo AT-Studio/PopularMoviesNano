@@ -1,4 +1,4 @@
-package com.example.alit.popularmoviesnano;
+package com.example.alit.popularmoviesnano.Adapters;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.example.alit.popularmoviesnano.R;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;

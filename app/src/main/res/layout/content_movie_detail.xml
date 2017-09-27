@@ -1,116 +1,205 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v4.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/nestedScrollView"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="com.example.alit.popularmoviesnano.MovieDetailActivity"
+    tools:context="com.example.alit.popularmoviesnano.MovieDetail.MovieDetailActivity"
     tools:showIn="@layout/activity_movie_detail">
 
-    <LinearLayout
+    <!-- TODO: 1) try to replace Layouts with ConstraintLayout -->
+    <!-- TODO: 2) use styles -->
+
+    <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="wrap_content">
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="20dp">
+        <TextView
+            android:id="@+id/titleText"
+            style="@style/detailMovieInfoTextStyle"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/titleLabel"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Star Wars: Episode V - The Empire Strikes Back" />
 
-            <TextView
-                android:id="@+id/titleText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/primary_text"
-                android:layout_marginRight="40dp"
-                tools:text="The Godfather"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/divider"
-                android:layout_alignParentRight="true"
-                android:text="Title"/>
-
-        </RelativeLayout>
+        <TextView
+            android:id="@+id/titleLabel"
+            style="@style/detailLabelTextStyle"
+            android:text="@string/detail_title_label"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <View
-            android:layout_width="match_parent"
-            android:layout_height="0.5dp"
-            android:background="@color/divider"
-            android:layout_marginRight="10dp"
-            android:layout_marginLeft="10dp"></View>
+            android:id="@+id/titleDivider"
+            style="@style/detailDividerStyle"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/titleText" />
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="20dp">
+        <TextView
+            android:id="@+id/releaseDateText"
+            style="@style/detailMovieInfoTextStyle"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/releaseDateLabel"
+            app:layout_constraintTop_toBottomOf="@+id/titleDivider"
+            tools:text="1980-08-20" />
 
-            <TextView
-                android:id="@+id/releaseDateText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/primary_text"
-                tools:text="1999-07-29"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/divider"
-                android:layout_alignParentRight="true"
-                android:text="Release Date"/>
-
-        </RelativeLayout>
+        <TextView
+            android:id="@+id/releaseDateLabel"
+            style="@style/detailLabelTextStyle"
+            android:text="@string/detail_release_date_label"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/titleDivider"/>
 
         <View
-            android:layout_width="match_parent"
-            android:layout_height="0.5dp"
-            android:background="@color/divider"
-            android:layout_marginRight="10dp"
-            android:layout_marginLeft="10dp"></View>
+            android:id="@+id/releaseDateDivider"
+            style="@style/detailDividerStyle"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/releaseDateText"/>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="20dp">
+        <TextView
+            android:id="@+id/ratingText"
+            style="@style/detailMovieInfoTextStyle"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/ratingLabel"
+            app:layout_constraintTop_toBottomOf="@+id/releaseDateDivider"
+            tools:text="8.8/10"/>
 
-            <TextView
-                android:id="@+id/ratingText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/primary_text"
-                tools:text="8.0/10"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/divider"
-                android:layout_alignParentRight="true"
-                android:text="Rating"/>
-
-        </RelativeLayout>
+        <TextView
+            android:id="@+id/ratingLabel"
+            style="@style/detailLabelTextStyle"
+            android:text="@string/detail_rating_label"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/releaseDateDivider" />
 
         <View
-            android:layout_width="match_parent"
-            android:layout_height="0.5dp"
-            android:background="@color/divider"
-            android:layout_marginRight="10dp"
-            android:layout_marginLeft="10dp"></View>
+            android:id="@+id/ratingDivider"
+            style="@style/detailDividerStyle"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/ratingText"/>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/synopsisText"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:padding="20dp">
+            android:layout_marginEnd="20dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
+            android:textColor="@color/primary_text"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/ratingDivider"
+            tools:text="After the rebels are overpowered by the Empire on their newly established base, Luke Skywalker begins Jedi training with Master Yoda. His friends accept shelter from a questionable ally as Darth Vader hunts them in a plan to capture Luke." />
 
-            <TextView
-                android:id="@+id/synopsisText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/secondary_text"/>
+        <!--<ImageView-->
+            <!--android:id="@+id/trailerIcon"-->
+            <!--android:layout_width="0dp"-->
+            <!--android:layout_height="0dp"-->
+            <!--android:background="?attr/selectableItemBackgroundBorderless"-->
+            <!--android:src="@drawable/trailer_icon_24dp"-->
+            <!--android:visibility="gone"-->
+            <!--app:layout_constraintLeft_toLeftOf="parent"-->
+            <!--app:layout_constraintRight_toLeftOf="@+id/commentIcon"-->
+            <!--app:layout_constraintTop_toBottomOf="@+id/synopsisText" />-->
 
-        </RelativeLayout>
+        <!--<ImageView-->
+            <!--android:id="@+id/commentIcon"-->
+            <!--android:layout_width="0dp"-->
+            <!--android:layout_height="0dp"-->
+            <!--android:background="?attr/selectableItemBackgroundBorderless"-->
+            <!--android:src="@drawable/comment_icon_24dp"-->
+            <!--android:visibility="gone"-->
+            <!--app:layout_constraintLeft_toRightOf="@+id/trailerIcon"-->
+            <!--app:layout_constraintRight_toRightOf="parent"-->
+            <!--app:layout_constraintTop_toBottomOf="@+id/synopsisText" />-->
 
-    </LinearLayout>
+        <!--<LinearLayout-->
+            <!--android:id="@+id/trailerInfoWrapper"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:orientation="horizontal"-->
+            <!--android:visibility="gone"-->
+            <!--app:layout_constraintLeft_toLeftOf="@+id/trailerIcon"-->
+            <!--app:layout_constraintRight_toRightOf="@+id/trailerIcon"-->
+            <!--app:layout_constraintTop_toBottomOf="@+id/trailerIcon">-->
+
+            <!--<TextView-->
+                <!--android:id="@+id/trailerLabel"-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="Trailers "-->
+                <!--android:textColor="@color/primary_text" />-->
+
+            <!--<TextView-->
+                <!--android:id="@+id/numberOfTrailers"-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:textColor="@color/secondary_text"-->
+                <!--tools:text="(3)" />-->
+
+        <!--</LinearLayout>-->
+
+        <!--<LinearLayout-->
+            <!--android:id="@+id/reviewsInfoWrapper"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:orientation="horizontal"-->
+            <!--android:visibility="gone"-->
+            <!--app:layout_constraintLeft_toLeftOf="@+id/commentIcon"-->
+            <!--app:layout_constraintRight_toRightOf="@+id/commentIcon"-->
+            <!--app:layout_constraintTop_toBottomOf="@+id/commentIcon">-->
+
+            <!--<TextView-->
+                <!--android:id="@+id/reviewsLabel"-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="Reviews "-->
+                <!--android:textColor="@color/primary_text" />-->
+
+            <!--<TextView-->
+                <!--android:id="@+id/numberOfReviews"-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:textColor="@color/secondary_text"-->
+                <!--tools:text="(25)" />-->
+
+        <!--</LinearLayout>-->
+
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tabLayout"
+            style="@style/categoryTabStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textAllCaps="false"
+            android:visibility="visible"
+            app:tabSelectedTextColor="@color/colorAccent"
+            app:tabTextColor="@color/divider"
+            app:tabTextAppearance="@android:style/TextAppearance.Widget.TabWidget"
+            android:layout_marginTop="40dp"
+            app:layout_constraintTop_toBottomOf="@+id/synopsisText"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent">
+        </android.support.design.widget.TabLayout>
+
+        <android.support.v4.view.ViewPager
+            android:id="@+id/viewPager"
+            android:layout_width="0dp"
+            android:layout_height="300dp"
+            android:visibility="visible"
+            app:layout_constraintTop_toBottomOf="@+id/tabLayout"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            android:layout_marginLeft="0dp"
+            android:layout_marginTop="0dp">
+
+        </android.support.v4.view.ViewPager>
+
+    </android.support.constraint.ConstraintLayout>
 
 </android.support.v4.widget.NestedScrollView>
