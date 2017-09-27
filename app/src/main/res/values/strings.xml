@@ -8,7 +8,7 @@
     <string name="main_most_popular">Most Popular Movies</string>
 
     <string name="search_pref_key" translatable="false">querySetting</string>
-
+    
     <string name="api_key" translatable="false"></string>
 
     <string name="error">Failed to load movies :(</string>
