@@ -9,8 +9,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
+import com.example.alit.popularmoviesnano.MyDatastructures.MovieListItem;
 import com.example.alit.popularmoviesnano.R;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -24,7 +27,7 @@ import butterknife.ButterKnife;
 
 public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.MovieViewHolder> {
 
-    private ArrayList<String> posterURLs;
+    private ArrayList<MovieListItem> movieListItems;
     private MoviePosterItemClickListener clickListener;
     private Context context;
 
@@ -34,12 +37,12 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
     Drawable loadingDrawable;
     Drawable errorDrawable;
 
-    public MoviePosterAdapter(ArrayList<String> posterURls, MoviePosterItemClickListener clickListener) {
-        this.posterURLs = posterURls;
+    public MoviePosterAdapter(ArrayList<MovieListItem> movieListItems, MoviePosterItemClickListener clickListener) {
+        this.movieListItems = movieListItems;
         this.clickListener = clickListener;
         this.context = (AppCompatActivity) clickListener;
         this.loadingDrawable = ContextCompat.getDrawable(context, R.drawable.cloud_loading);
-        this.errorDrawable = ContextCompat.getDrawable(context, R.drawable.poster_error_sad);
+        this.errorDrawable = ContextCompat.getDrawable(context, R.drawable.error_frame);
     }
 
     @Override
@@ -51,21 +54,42 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
     }
 
     @Override
-    public void onBindViewHolder(MovieViewHolder holder, int position) {
+    public void onBindViewHolder(final MovieViewHolder holder, int position) {
 
-        Picasso.with(context).load(baseUrl + posterURLs.get(position))
-                .placeholder(loadingDrawable)
-                .error(errorDrawable)
-                .into(holder.posterImageView);
+        holder.movieTitle.setVisibility(View.INVISIBLE);
+
+        final MovieListItem item = movieListItems.get(position);
+
+        if (item.poster != null) {
+            holder.posterImageView.setImageBitmap(item.poster);
+        }
+        else {
+            Picasso.with(context).load(baseUrl + item.posterURL)
+                    .placeholder(loadingDrawable)
+                    .error(errorDrawable)
+                    .into(holder.posterImageView, new Callback() {
+                        @Override
+                        public void onSuccess() {
+
+                        }
+
+                        @Override
+                        public void onError() {
+                            holder.movieTitle.setText(item.title);
+                            holder.movieTitle.setVisibility(View.VISIBLE);
+                        }
+                    });
+        }
 
     }
 
     @Override
     public int getItemCount() {
-        return posterURLs.size();
+        return movieListItems.size();
     }
 
-    public void updateMovies() {
+    public void updateMovies(ArrayList<MovieListItem> newList) {
+        movieListItems = newList;
         notifyDataSetChanged();
     }
 
@@ -78,6 +102,8 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
     public class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         @BindView(R.id.posterImageView) ImageView posterImageView;
+
+        @BindView(R.id.movieTitle) TextView movieTitle;
 
         public MovieViewHolder(View itemView) {
             super(itemView);

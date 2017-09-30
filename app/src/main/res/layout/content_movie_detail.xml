@@ -9,9 +9,6 @@
     tools:context="com.example.alit.popularmoviesnano.MovieDetail.MovieDetailActivity"
     tools:showIn="@layout/activity_movie_detail">
 
-    <!-- TODO: 1) try to replace Layouts with ConstraintLayout -->
-    <!-- TODO: 2) use styles -->
-
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -97,80 +94,6 @@
             app:layout_constraintTop_toBottomOf="@+id/ratingDivider"
             tools:text="After the rebels are overpowered by the Empire on their newly established base, Luke Skywalker begins Jedi training with Master Yoda. His friends accept shelter from a questionable ally as Darth Vader hunts them in a plan to capture Luke." />
 
-        <!--<ImageView-->
-            <!--android:id="@+id/trailerIcon"-->
-            <!--android:layout_width="0dp"-->
-            <!--android:layout_height="0dp"-->
-            <!--android:background="?attr/selectableItemBackgroundBorderless"-->
-            <!--android:src="@drawable/trailer_icon_24dp"-->
-            <!--android:visibility="gone"-->
-            <!--app:layout_constraintLeft_toLeftOf="parent"-->
-            <!--app:layout_constraintRight_toLeftOf="@+id/commentIcon"-->
-            <!--app:layout_constraintTop_toBottomOf="@+id/synopsisText" />-->
-
-        <!--<ImageView-->
-            <!--android:id="@+id/commentIcon"-->
-            <!--android:layout_width="0dp"-->
-            <!--android:layout_height="0dp"-->
-            <!--android:background="?attr/selectableItemBackgroundBorderless"-->
-            <!--android:src="@drawable/comment_icon_24dp"-->
-            <!--android:visibility="gone"-->
-            <!--app:layout_constraintLeft_toRightOf="@+id/trailerIcon"-->
-            <!--app:layout_constraintRight_toRightOf="parent"-->
-            <!--app:layout_constraintTop_toBottomOf="@+id/synopsisText" />-->
-
-        <!--<LinearLayout-->
-            <!--android:id="@+id/trailerInfoWrapper"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:orientation="horizontal"-->
-            <!--android:visibility="gone"-->
-            <!--app:layout_constraintLeft_toLeftOf="@+id/trailerIcon"-->
-            <!--app:layout_constraintRight_toRightOf="@+id/trailerIcon"-->
-            <!--app:layout_constraintTop_toBottomOf="@+id/trailerIcon">-->
-
-            <!--<TextView-->
-                <!--android:id="@+id/trailerLabel"-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:text="Trailers "-->
-                <!--android:textColor="@color/primary_text" />-->
-
-            <!--<TextView-->
-                <!--android:id="@+id/numberOfTrailers"-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:textColor="@color/secondary_text"-->
-                <!--tools:text="(3)" />-->
-
-        <!--</LinearLayout>-->
-
-        <!--<LinearLayout-->
-            <!--android:id="@+id/reviewsInfoWrapper"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:orientation="horizontal"-->
-            <!--android:visibility="gone"-->
-            <!--app:layout_constraintLeft_toLeftOf="@+id/commentIcon"-->
-            <!--app:layout_constraintRight_toRightOf="@+id/commentIcon"-->
-            <!--app:layout_constraintTop_toBottomOf="@+id/commentIcon">-->
-
-            <!--<TextView-->
-                <!--android:id="@+id/reviewsLabel"-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:text="Reviews "-->
-                <!--android:textColor="@color/primary_text" />-->
-
-            <!--<TextView-->
-                <!--android:id="@+id/numberOfReviews"-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:textColor="@color/secondary_text"-->
-                <!--tools:text="(25)" />-->
-
-        <!--</LinearLayout>-->
-
         <android.support.design.widget.TabLayout
             android:id="@+id/tabLayout"
             style="@style/categoryTabStyle"
@@ -196,6 +119,7 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             android:layout_marginLeft="0dp"
+            android:layout_marginStart="0dp"
             android:layout_marginTop="0dp">
 
         </android.support.v4.view.ViewPager>

@@ -1,14 +1,15 @@
 package com.example.alit.popularmoviesnano.Adapters;
 
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.alit.popularmoviesnano.R;
+import com.example.alit.popularmoviesnano.MovieDetail.MovieDetailActivity;
 import com.example.alit.popularmoviesnano.MyDatastructures.TrailersListItem;
+import com.example.alit.popularmoviesnano.R;
 
 import java.util.ArrayList;
 
@@ -57,13 +58,15 @@ public class MovieTrailersAdapter extends RecyclerView.Adapter<MovieTrailersAdap
 
     public interface MovieTrailerItemClickListener {
 
-        public void trailerClicked(int position);
+        void trailerClicked(int position);
 
     }
 
     public class MovieTrailersViewHolder extends RecyclerView.ViewHolder {
 
         @BindView(R.id.trailerName) TextView trailerName;
+
+        @BindView(R.id.shareIcon) ImageView shareIcon;
 
         public MovieTrailersViewHolder(View itemView) {
 
@@ -74,8 +77,14 @@ public class MovieTrailersAdapter extends RecyclerView.Adapter<MovieTrailersAdap
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Log.d("MovieDetailActivity", "clicked position: " + getAdapterPosition());
                     listener.trailerClicked(getAdapterPosition());
+                }
+            });
+
+            shareIcon.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    ((MovieDetailActivity) listener).shareMovieYouTubeWebLink(getAdapterPosition());
                 }
             });
 

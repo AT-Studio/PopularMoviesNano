@@ -3,13 +3,17 @@ package com.example.alit.popularmoviesnano.Main;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
@@ -18,27 +22,27 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.example.alit.popularmoviesnano.Adapters.MoviePosterAdapter;
+import com.example.alit.popularmoviesnano.ContentProvider.MovieDbContract;
 import com.example.alit.popularmoviesnano.MovieDetail.MovieDetailActivity;
 import com.example.alit.popularmoviesnano.MyDatastructures.MovieListItem;
-import com.example.alit.popularmoviesnano.Adapters.MoviePosterAdapter;
-import com.example.alit.popularmoviesnano.NetworkUtils.NetworkUtils;
 import com.example.alit.popularmoviesnano.R;
 import com.example.alit.popularmoviesnano.Settings.SettingsActivity;
+import com.example.alit.popularmoviesnano.Utils.DbUtils;
+import com.example.alit.popularmoviesnano.Utils.NetworkUtils;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Scanner;
 
 import butterknife.BindView;
@@ -47,13 +51,9 @@ import butterknife.ButterKnife;
 public class MainActivity extends AppCompatActivity implements MoviePosterAdapter.MoviePosterItemClickListener,
         SharedPreferences.OnSharedPreferenceChangeListener, LoaderManager.LoaderCallbacks<String>{
 
-//    private static final String SCHEME = "https";
-//    private static final String AUTHORITY = "api.themoviedb.org";
-//    private static final String BASE_PATH = "3/movie";
-//    private static final String SORT_PARAM = "sort_by";
-//    private static final String API_PARAM = "api_key";
-
     private static final int MOVIES_LOADER_ID = 1;
+
+    private static final int CURSOR_LOADER_ID = 2;
 
     private static final String MOVIE_QUERY_URL_EXTRA = "movie_query";
 
@@ -73,12 +73,13 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
 
     @BindView(R.id.swipeRefreshLayout) SwipeRefreshLayout swipeRefreshLayout;
 
-    private ArrayList<String> moviePosterURLs;
-    private HashMap<String, MovieListItem> movieMap;
-
     private String querySetting;
 
     private boolean querySettingsChanged;
+
+    private ArrayList<MovieListItem> movieListItems;
+
+    private LoaderManager.LoaderCallbacks<Cursor> checkDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +96,10 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                getMovieData();
+                if (querySetting.equals(getResources().getString(R.string.favorites_path))) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
+                else getMovieData();
             }
         });
 
@@ -103,7 +107,6 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
 
         if (savedInstanceState != null) {
             movieQueryUrl = savedInstanceState.getString(MOVIE_QUERY_URL_EXTRA);
-            Log.d(TAG, "movieQueryUrl: " + movieQueryUrl);
         }
 
         getSharedPreferences();
@@ -120,11 +123,14 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
         querySetting = prefs.getString(resources.getString(R.string.search_pref_key), getResources().getString(R.string.top_rated_path));
 
         if (actionBar != null) {
-            if (querySetting.equals(getResources().getString(R.string.top_rated_path))) {
+            if (querySetting.equals(resources.getString(R.string.top_rated_path))) {
                 getSupportActionBar().setTitle(resources.getString(R.string.main_top_rated));
             }
-            else {
+            else if (querySetting.equals(resources.getString(R.string.most_popular_path))) {
                 getSupportActionBar().setTitle(resources.getString(R.string.main_most_popular));
+            }
+            else {
+                getSupportActionBar().setTitle(resources.getString(R.string.main_favorites));
             }
         }
 
@@ -144,58 +150,79 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
 
     public void setMovieQueryUrl() {
 
-//        Uri.Builder builder = new Uri.Builder();
-//
-//        builder.scheme(SCHEME)
-//                .authority(AUTHORITY)
-//                .path(BASE_PATH)
-//                .appendPath(querySetting)
-//                .appendQueryParameter(API_PARAM, getResources().getString(R.string.api_key));
-//
-//        Uri uri = builder.build();
-//
-//        movieQueryUrl = uri.toString();
-
         movieQueryUrl = NetworkUtils.getMovieQueryUrl(querySetting, getResources());
 
     }
 
     public void getMovieData() {
 
-        Log.d(TAG, "called getMovieData");
+        if (querySetting.equals(getResources().getString(R.string.favorites_path))) {
 
-        if (movieQueryUrl == null) {
-            setMovieQueryUrl();
+            if (checkDb == null) instantiateCursorLoader();
+
+            LoaderManager loaderManager = getSupportLoaderManager();
+
+            loaderManager.restartLoader(CURSOR_LOADER_ID, null, checkDb);
+
         }
+        else {
 
-        LoaderManager loaderManager = getSupportLoaderManager();
-//        Loader<Boolean> movieLoader = loaderManager.getLoader(MOVIES_LOADER_ID);
+            if (movieQueryUrl == null) {
+                setMovieQueryUrl();
+            }
 
-        loaderManager.restartLoader(MOVIES_LOADER_ID, null, this);
+            LoaderManager loaderManager = getSupportLoaderManager();
 
-//        if (movieLoader == null) {
-//            Log.d(TAG, "loader was null");
-//            loaderManager.initLoader(MOVIES_LOADER_ID, null, this);
-//        }
-//        else {
-//            Log.d(TAG, "loader was not null");
-//            loaderManager.restartLoader(MOVIES_LOADER_ID, null, this);
-//        }
+            loaderManager.restartLoader(MOVIES_LOADER_ID, null, this);
+
+        }
 
     }
 
-//    public URL getURL(String uriString) {
-//
-//        URL url = null;
-//        try {
-//            url = new URL(uriString);
-//        }
-//        catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        return url;
-//    }
+    public void instantiateCursorLoader() {
+
+        checkDb = new LoaderManager.LoaderCallbacks<Cursor>() {
+            @Override
+            public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+                return new CursorLoader(MainActivity.this,
+                        MovieDbContract.MovieEntry.CONTENT_URI,
+                        null,
+                        null,
+                        null,
+                        null
+                );
+            }
+
+            @Override
+            public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+
+                if (swipeRefreshLayout.isRefreshing()) swipeRefreshLayout.setRefreshing(false);
+                else progressBar.setVisibility(View.INVISIBLE);
+
+                if (querySetting.equals(getResources().getString(R.string.favorites_path))) {
+
+                    movieListItems = DbUtils.getMovieListItems(data);
+
+                    if (adapter != null) {
+                        adapter.updateMovies(movieListItems);
+                    }
+                    else {
+                        adapter = new MoviePosterAdapter(movieListItems, MainActivity.this);
+                        moviesRecyclerView.setAdapter(adapter);
+                    }
+                    showMovieData();
+
+                }
+
+            }
+
+            @Override
+            public void onLoaderReset(Loader<Cursor> loader) {
+
+            }
+        };
+
+    }
 
     public void showError() {
         moviesRecyclerView.setVisibility(View.INVISIBLE);
@@ -207,49 +234,33 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
         moviesRecyclerView.setVisibility(View.VISIBLE);
     }
 
-    public void populateMovieList(String result) {
-
-        if (moviePosterURLs == null) {
-            moviePosterURLs = new ArrayList<>();
-            movieMap = new HashMap<>();
-        }
-        else {
-            moviePosterURLs.clear();
-            movieMap.clear();
-        }
-
-        try {
-            JSONObject jsonObject = new JSONObject(result);
-            JSONArray results = jsonObject.getJSONArray(NetworkUtils.JSON_RESULTS);
-
-            for (int i = 0; i < results.length(); i++) {
-
-                JSONObject movie = (JSONObject) results.get(i);
-
-                String movieID = movie.getString(MovieListItem.MOVIE_ID);
-                String title = movie.getString(MovieListItem.ORIGINAL_TITLE);
-                String posterURL = movie.getString(MovieListItem.POSTER_PATH);
-                String plotSummary = movie.getString(MovieListItem.OVERVIEW);
-                float userRating = Float.parseFloat(movie.getString(MovieListItem.VOTE_AVERAGE));
-                String releaseDate = movie.getString(MovieListItem.RELEASE_DATE);
-
-                moviePosterURLs.add(posterURL);
-                movieMap.put(posterURL, (new MovieListItem(movieID, title, posterURL, plotSummary, userRating, releaseDate)));
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public void movieItemClicked(int position) {
         Intent intent = new Intent(this, MovieDetailActivity.class);
-        MovieListItem item = movieMap.get(moviePosterURLs.get(position));
+        MovieListItem item = movieListItems.get(position);
         Bundle bundle = new Bundle();
-        bundle.putString(MovieListItem.MOVIE_ID, item.movieID);
+        bundle.putInt(MovieListItem.MOVIE_ID, item.movieID);
         bundle.putString(MovieListItem.ORIGINAL_TITLE, item.title);
-        bundle.putString(MovieListItem.POSTER_PATH, item.posterURL);
+        if (item.poster != null) {
+            File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+            File file = new File(storageDir.getAbsolutePath(), "poster.jpg");
+            if (file.exists()) file.delete();
+
+            try {
+                FileOutputStream out = new FileOutputStream(file);
+                if (out!= null) {
+                    item.poster.compress(Bitmap.CompressFormat.JPEG, 85, out);
+                    out.flush();
+                    out.close();
+                }
+                String posterLocation = file.getAbsolutePath();
+                bundle.putString(MovieListItem.POSTER, posterLocation);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        else bundle.putString(MovieListItem.POSTER_PATH, item.posterURL);
         bundle.putString(MovieListItem.OVERVIEW, item.plotSummary);
         bundle.putFloat(MovieListItem.VOTE_AVERAGE, item.userRating);
         bundle.putString(MovieListItem.RELEASE_DATE, item.releaseDate);
@@ -269,15 +280,18 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
             if (!newSetting.equals(querySetting)) querySettingsChanged = true;
             querySetting = newSetting;
             if (actionBar != null) {
-                if (querySetting.equals(getResources().getString(R.string.top_rated_path))) {
+                if (querySetting.equals(resources.getString(R.string.top_rated_path))) {
                     getSupportActionBar().setTitle(resources.getString(R.string.main_top_rated));
+                    setMovieQueryUrl();
+                }
+                else if (querySetting.equals(resources.getString(R.string.most_popular_path))) {
+                    getSupportActionBar().setTitle(resources.getString(R.string.main_most_popular));
+                    setMovieQueryUrl();
                 }
                 else {
-                    getSupportActionBar().setTitle(resources.getString(R.string.main_most_popular));
+                    getSupportActionBar().setTitle(resources.getString(R.string.main_favorites));
                 }
             }
-            Log.d(TAG, "going to change query settings");
-            setMovieQueryUrl();
             getMovieData();
         }
     }
@@ -293,15 +307,11 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
             protected void onStartLoading() {
                 super.onStartLoading();
 
-                Log.d(TAG, "called onStartLoading");
-
                 if (movieQueryUrl == null) return;
 
                 if (!swipeRefreshLayout.isRefreshing()) {
 
                     if (!querySettingsChanged && queryResult != null) {
-
-                        Log.d(TAG, "have cached result");
 
                         deliverResult(queryResult);
 
@@ -362,22 +372,23 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
         if (swipeRefreshLayout.isRefreshing()) swipeRefreshLayout.setRefreshing(false);
         else progressBar.setVisibility(View.INVISIBLE);
 
-        Log.d(TAG, "result: " + result);
+        if (!querySetting.equals(getResources().getString(R.string.favorites_path))) {
 
-        if (!result.isEmpty()) {
-            populateMovieList(result);
-            if (adapter != null) {
-                Log.d(TAG, "calling updateMovies");
-                adapter.updateMovies();
+            if (!result.isEmpty()) {
+                movieListItems = NetworkUtils.getMovieItemList(result);
+                if (adapter != null) {
+                    adapter.updateMovies(movieListItems);
+                }
+                else {
+                    adapter = new MoviePosterAdapter(movieListItems, MainActivity.this);
+                    moviesRecyclerView.setAdapter(adapter);
+                }
+                showMovieData();
             }
             else {
-                adapter = new MoviePosterAdapter(moviePosterURLs, MainActivity.this);
-                moviesRecyclerView.setAdapter(adapter);
+                showError();
             }
-            showMovieData();
-        }
-        else {
-            showError();
+
         }
 
     }

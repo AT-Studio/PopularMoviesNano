@@ -6,18 +6,6 @@
     android:layout_height="wrap_content">
 
     <TextView
-        android:id="@+id/authorLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/divider"
-        android:visibility="gone"
-        android:text="Author "
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="15dp"
-        android:layout_marginLeft="10dp"
-        app:layout_constraintLeft_toLeftOf="parent" />
-
-    <TextView
         android:id="@+id/author"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

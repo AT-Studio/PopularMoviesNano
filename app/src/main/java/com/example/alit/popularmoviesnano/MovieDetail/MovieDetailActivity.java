@@ -3,11 +3,16 @@ package com.example.alit.popularmoviesnano.MovieDetail;
 import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.content.ActivityNotFoundException;
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.constraint.ConstraintLayout;
@@ -21,6 +26,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.NestedScrollView;
@@ -29,7 +35,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,12 +44,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.alit.popularmoviesnano.MyDatastructures.MovieListItem;
 import com.example.alit.popularmoviesnano.Adapters.MovieTrailersAdapter;
-import com.example.alit.popularmoviesnano.NetworkUtils.NetworkUtils;
-import com.example.alit.popularmoviesnano.R;
+import com.example.alit.popularmoviesnano.ContentProvider.MovieDbContract;
+import com.example.alit.popularmoviesnano.MyDatastructures.MovieListItem;
 import com.example.alit.popularmoviesnano.MyDatastructures.ReviewsListItem;
 import com.example.alit.popularmoviesnano.MyDatastructures.TrailersListItem;
+import com.example.alit.popularmoviesnano.R;
+import com.example.alit.popularmoviesnano.Utils.DbUtils;
+import com.example.alit.popularmoviesnano.Utils.NetworkUtils;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
@@ -61,15 +68,6 @@ import static com.example.alit.popularmoviesnano.R.id.toolbar_layout;
 public class MovieDetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<String>,
         MovieTrailersAdapter.MovieTrailerItemClickListener {
 
-//    private static final String posterSize = "w780";
-//    private static final String posterBaseUrl = "http://image.tmdb.org/t/p/" + posterSize + "/";
-
-    private static final String MOVIE_ID_EXTRA = "movieID";
-    private static final String TITLE_EXTRA = "title";
-    private static final String POSTER_URL_EXTRA = "posterURL";
-    private static final String PLOT_SUMMARY_EXTRA = "plotSummary";
-    private static final String USER_RATING_EXTRA = "userRating";
-    private static final String RELEASE_DATE_EXTRA = "releaseDate";
     private static final String TRAILERS_QUERY_URL_EXTRA = "trailers_query";
     private static final String REVIEWS_QUERY_URL_EXTRA = "reviews_query";
 
@@ -78,6 +76,7 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
     private static final int TRAILERS_LOADER_ID = 1;
     private static final int REVIEWS_LOADER_ID = 2;
+    private static final int CURSOR_LOADER_ID = 3;
 
     private static final int PAGER_NUM_PAGES = 2;
 
@@ -103,14 +102,6 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
     @BindView(R.id.synopsisText) TextView synopsisText;
 
-    @BindView(R.id.trailerIcon) ImageView trailerIcon;
-
-    @BindView(R.id.commentIcon) ImageView commentIcon;
-
-    @BindView(R.id.numberOfTrailers) TextView numberOfTrailers;
-
-    @BindView(R.id.numberOfReviews) TextView numberOfReviews;
-
     @BindView(R.id.tabLayout) TabLayout tabLayout;
 
     @BindView(R.id.viewPager) ViewPager viewPager;
@@ -119,12 +110,15 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
     @BindView(R.id.followStarIcon) ImageView followStarIcon;
 
-    private String movieID;
+    private int movieID;
     private String title;
     private String posterURL;
     private String plotSummary;
     private float userRating;
     private String releaseDate;
+    private Bitmap poster;
+
+    private String posterLocation;
 
     private DisplayMetrics displayMetrics;
 
@@ -138,6 +132,11 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
     private MovieTrailersFragment movieTrailersFragment;
     private MovieReviewsFragment movieReviewsFragment;
+
+    boolean pictureIsSet;
+    boolean databaseIsQueried;
+
+    boolean isFollowed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -156,10 +155,13 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         displayMetrics = getResources().getDisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 
+        followWrapper.setVisibility(View.INVISIBLE);
+
         if (bundle != null) {
-            movieID = bundle.getString(MovieListItem.MOVIE_ID);
+            movieID = bundle.getInt(MovieListItem.MOVIE_ID);
             title = bundle.getString(MovieListItem.ORIGINAL_TITLE);
-            posterURL = bundle.getString(MovieListItem.POSTER_PATH);
+            posterLocation = bundle.getString(MovieListItem.POSTER);
+            if (posterLocation == null) posterURL = bundle.getString(MovieListItem.POSTER_PATH);
             plotSummary = bundle.getString(MovieListItem.OVERVIEW);
             userRating = bundle.getFloat(MovieListItem.VOTE_AVERAGE);
             releaseDate = bundle.getString(MovieListItem.RELEASE_DATE);
@@ -167,12 +169,13 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         else if (savedInstanceState != null) {
             trailersQueryUrl = savedInstanceState.getString(TRAILERS_QUERY_URL_EXTRA);
             reviewsQueryUrl = savedInstanceState.getString(REVIEWS_QUERY_URL_EXTRA);
-            movieID = savedInstanceState.getString(MOVIE_ID_EXTRA);
-            title = savedInstanceState.getString(TITLE_EXTRA);
-            posterURL = savedInstanceState.getString(POSTER_URL_EXTRA);
-            plotSummary = savedInstanceState.getString(PLOT_SUMMARY_EXTRA);
-            userRating = savedInstanceState.getFloat(USER_RATING_EXTRA);
-            releaseDate = savedInstanceState.getString(RELEASE_DATE_EXTRA);
+            movieID = savedInstanceState.getInt(MovieListItem.MOVIE_ID);
+            title = savedInstanceState.getString(MovieListItem.ORIGINAL_TITLE);
+            posterLocation = savedInstanceState.getString(MovieListItem.POSTER);
+            if (posterLocation == null) posterURL = savedInstanceState.getString(MovieListItem.POSTER_PATH);
+            plotSummary = savedInstanceState.getString(MovieListItem.OVERVIEW);
+            userRating = savedInstanceState.getFloat(MovieListItem.VOTE_AVERAGE);
+            releaseDate = savedInstanceState.getString(MovieListItem.RELEASE_DATE);
         }
         else {
             finish();
@@ -194,7 +197,9 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
                 progressBar.setVisibility(View.GONE);
 
-                animateAppBar(height, bitmap);
+                poster = bitmap;
+
+                animateAppBar(height);
 
             }
 
@@ -213,14 +218,9 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
         progressBar.setVisibility(View.VISIBLE);
 
-        Picasso.with(this).load(NetworkUtils.getPosterBaseUrl() + posterURL).into(picassoTarget);
-
         tabLayout.post(new Runnable() {
             @Override
             public void run() {
-
-                Log.d("pagerStuff", "tabLayout height: " + tabLayout.getHeight());
-                Log.d("pagerStuff", "actionBar height: " + getSupportActionBar().getHeight());
 
                 int pagerHeight = displayMetrics.heightPixels - (tabLayout.getHeight() + getSupportActionBar().getHeight() + getStatusBarHeight());
 
@@ -243,39 +243,127 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
             }
         });
 
-        trailerIcon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-            }
-        });
-
-        commentIcon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-            }
-        });
-
         followWrapper.setOnClickListener(new View.OnClickListener() {
 
-            boolean isFollwing;
-
-
             @Override
             public void onClick(View view) {
-                if (isFollwing) {
+                if (isFollowed) {
+
+                    getContentResolver().delete(ContentUris.withAppendedId(MovieDbContract.MovieEntry.CONTENT_URI, movieID),
+                            null,
+                            null);
+
+                }
+                else {
+
+                    followWrapper.setEnabled(false);
+
+                    AsyncTask insert = new AsyncTask() {
+                        @Override
+                        protected Object doInBackground(Object[] objects) {
+
+                            Drawable drawable = (Drawable) objects[0];
+
+                            ContentValues values = new ContentValues();
+
+                            values.put(MovieDbContract.MovieEntry.COLUMN_MOVIE_ID, movieID);
+                            values.put(MovieDbContract.MovieEntry.COLUMN_ORIGINAL_TITLE, title);
+                            values.put(MovieDbContract.MovieEntry.COLUMN_POSTER, DbUtils.getByteArray(drawable));
+                            values.put(MovieDbContract.MovieEntry.COLUMN_OVERVIEW, plotSummary);
+                            values.put(MovieDbContract.MovieEntry.COLUMN_VOTE_AVERAGE, userRating);
+                            values.put(MovieDbContract.MovieEntry.COLUMN_RELEASE_DATE, releaseDate);
+
+                            getContentResolver().insert(MovieDbContract.MovieEntry.CONTENT_URI, values);
+
+                            return null;
+                        }
+                    };
+
+                    insert.execute(posterImageView.getDrawable());
+                }
+            }
+        });
+
+        if (posterLocation != null) {
+
+            poster = BitmapFactory.decodeFile(posterLocation);
+
+            float ratio = (float) poster.getHeight() / poster.getWidth();
+
+            int height = (int) (displayMetrics.widthPixels * ratio);
+
+            progressBar.setVisibility(View.GONE);
+
+            final CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) appBarLayout.getLayoutParams();
+            params.height = height + getStatusBarHeight();
+            appBarLayout.setLayoutParams(params);
+
+            CollapsingToolbarLayout.LayoutParams params1 = (CollapsingToolbarLayout.LayoutParams) posterImageView.getLayoutParams();
+            params1.height = height;
+            posterImageView.setLayoutParams(params1);
+            posterImageView.setImageBitmap(poster);
+            posterImageView.setVisibility(View.VISIBLE);
+            pictureIsSet = true;
+            if (databaseIsQueried) {
+                fadeIn(followWrapper, 200);
+            }
+
+        }
+        else {
+            Picasso.with(this).load(NetworkUtils.getPosterBaseUrl() + posterURL).into(picassoTarget);
+        }
+
+        setUpPager();
+        queryDb();
+    }
+
+    public void queryDb() {
+
+        LoaderManager.LoaderCallbacks<Cursor> checkDb = new LoaderManager.LoaderCallbacks<Cursor>() {
+            @Override
+            public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+                return new CursorLoader(MovieDetailActivity.this,
+                        ContentUris.withAppendedId(MovieDbContract.MovieEntry.CONTENT_URI, movieID),
+                        null,
+                        null,
+                        null,
+                        null
+                );
+            }
+
+            @Override
+            public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+
+                if (!(data.moveToFirst()) || data.getCount()== 0) {
+                    isFollowed = false;
                     followStarIcon.setImageDrawable(ContextCompat.getDrawable(MovieDetailActivity.this, R.drawable.star_unchecked_24dp));
                 }
                 else {
+                    isFollowed = true;
                     followStarIcon.setImageDrawable(ContextCompat.getDrawable(MovieDetailActivity.this, R.drawable.star_checked_24dp));
-                    Toast.makeText(MovieDetailActivity.this, "You have added " + title + " to your favorites!", Toast.LENGTH_LONG).show();
+                    if (followWrapper.getVisibility() == View.VISIBLE) {
+                        Toast.makeText(MovieDetailActivity.this, "You have added " + title + " to your favorites!", Toast.LENGTH_LONG).show();
+                    }
+                    followWrapper.setEnabled(true);
                 }
-                isFollwing = !isFollwing;
-            }
-        });
 
-        setUpPager();
+
+                databaseIsQueried = true;
+                if (pictureIsSet) {
+                    if (followWrapper.getVisibility() == View.INVISIBLE) fadeIn(followWrapper, 200);
+                }
+            }
+
+            @Override
+            public void onLoaderReset(Loader<Cursor> loader) {
+
+            }
+        };
+
+        LoaderManager loaderManager = getSupportLoaderManager();
+
+        loaderManager.restartLoader(CURSOR_LOADER_ID, null, checkDb);
+
     }
 
     public void setUpPager() {
@@ -296,25 +384,32 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         getMovieReviews();
     }
 
-    public void playTrailer(String key) {
+    public void shareMovieYouTubeWebLink(int position) {
 
-        Log.d("MovieDetailActivity", "called playTrailer");
+        String link = YOUTUBE_WEB_BASE_URI + trailersListItems.get(position).trailerKey;
+
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, link);
+        startActivity(Intent.createChooser(shareIntent, "Share trailer using"));
+
+    }
+
+    public void playTrailer(String key) {
 
         Intent YouTubeAppIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(YOUTUBE_APP_BASE_URI + key));
         Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(YOUTUBE_WEB_BASE_URI + key));
 
         try {
-            Log.d("MovieDetailActivity", "trying to start youtube app");
             startActivity(YouTubeAppIntent);
         }
         catch (ActivityNotFoundException e) {
-            Log.d("MovieDetailActivity", "failed to open youtube app");
             startActivity(webIntent);
         }
 
     }
 
-    public void animateAppBar(final int finalHeight, final Bitmap bitmap) {
+    public void animateAppBar(final int finalHeight) {
 
         final CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) appBarLayout.getLayoutParams();
         ValueAnimator animator = ValueAnimator.ofInt(appBarLayout.getHeight(), finalHeight + getStatusBarHeight()).setDuration(400);
@@ -337,8 +432,11 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
                 CollapsingToolbarLayout.LayoutParams params1 = (CollapsingToolbarLayout.LayoutParams) posterImageView.getLayoutParams();
                 params1.height = finalHeight;
                 posterImageView.setLayoutParams(params1);
-                posterImageView.setImageBitmap(bitmap);
-//                nestedScrollView.fullScroll(View.FOCUS_UP);
+                posterImageView.setImageBitmap(poster);
+                pictureIsSet = true;
+                if (databaseIsQueried) {
+                    fadeIn(followWrapper, 200);
+                }
                 fadeIn(posterImageView, 200);
             }
 
@@ -358,7 +456,7 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
     public void getMovieTrailers() {
 
-        if (trailersQueryUrl == null) trailersQueryUrl = NetworkUtils.getMovieTrailersUrl(movieID, getResources());
+        if (trailersQueryUrl == null) trailersQueryUrl = NetworkUtils.getMovieTrailersUrl(Integer.toString(movieID), getResources());
 
         LoaderManager manager = getSupportLoaderManager();
 
@@ -368,7 +466,7 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
     public void getMovieReviews() {
 
-        if (reviewsQueryUrl == null) reviewsQueryUrl = NetworkUtils.getMovieReviewsUrl(movieID, getResources());
+        if (reviewsQueryUrl == null) reviewsQueryUrl = NetworkUtils.getMovieReviewsUrl(Integer.toString(movieID), getResources());
 
         LoaderManager manager = getSupportLoaderManager();
 
@@ -428,11 +526,9 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
                 URL url;
 
                 if (id == TRAILERS_LOADER_ID) {
-                    Log.d(TAG, "trailerQueryUrl: " + trailersQueryUrl);
                     url = NetworkUtils.getURL(trailersQueryUrl);
                 }
                 else {
-                    Log.d(TAG, "reviewsQueryUrl: " + reviewsQueryUrl);
                     url = NetworkUtils.getURL(reviewsQueryUrl);
                 }
 
@@ -480,7 +576,6 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
             trailersListItems = NetworkUtils.getMovieTrailerList(data);
 
             if (trailersListItems == null) {
-                //TODO: show error;
                 movieTrailersFragment.showError();
                 return;
             }
@@ -490,24 +585,6 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
             else {
                 movieTrailersFragment.setTrailerData(trailersListItems);
             }
-
-//            if (trailersListItems == null) {
-//                //TODO: show error
-//                Log.d(TAG, "there was an error");
-//                return;
-//            }
-//
-//            for (TrailersListItem listItem : trailersListItems) {
-//
-//                Log.d(TAG, "trailer name: " + listItem.name);
-//
-//            }
-//
-//            numberOfTrailers.setText("(" + trailersListItems.size() + ")");
-//
-//            //TODO: bug where it wont show recyclerView.. is fragment null?
-//
-//            if (movieTrailersFragment != null) movieTrailersFragment.setTrailerData(trailersListItems);
 
         }
         else {
@@ -520,9 +597,7 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
             reviewsListItems = NetworkUtils.getMovieReviewsList(data);
 
             if (reviewsListItems == null) {
-                //TODO: show error;
                 movieReviewsFragment.showError();
-                return;
             }
             else if (reviewsListItems.isEmpty()) {
                 movieReviewsFragment.showNoData();
@@ -530,16 +605,6 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
             else {
                 movieReviewsFragment.setReviewsData(reviewsListItems);
             }
-
-//            for (ReviewsListItem listItem : reviewsListItems) {
-//
-//                Log.d(TAG, "review author: " + listItem.author);
-//
-//            }
-//
-//            numberOfReviews.setText("(" + reviewsListItems.size() + ")");
-//
-//            if (movieReviewsFragment != null) movieReviewsFragment.setReviewsData(reviewsListItems);
 
         }
     }
@@ -565,11 +630,9 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         @Override
         public Fragment getItem(int position) {
             if (position == 0) {
-                //TODO: create Trailers Fragment
                 return new MovieTrailersFragment();
             }
             else {
-                //TODO: create Reviews Fragment
                 return new MovieReviewsFragment();
             }
         }
@@ -598,7 +661,6 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
     @Override
     public void trailerClicked(int position) {
-        Log.d("MovieDetailActivity", "triggered trailerClicked");
         playTrailer(trailersListItems.get(position).trailerKey);
     }
 
@@ -606,12 +668,13 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     protected void onSaveInstanceState(Bundle outState) {
         if (trailersQueryUrl != null) outState.putString(TRAILERS_QUERY_URL_EXTRA, trailersQueryUrl);
         if (reviewsQueryUrl != null) outState.putString(REVIEWS_QUERY_URL_EXTRA, reviewsQueryUrl);
-        outState.putString(MOVIE_ID_EXTRA, movieID);
-        outState.putString(TITLE_EXTRA, title);
-        outState.putString(POSTER_URL_EXTRA, posterURL);
-        outState.putString(PLOT_SUMMARY_EXTRA, plotSummary);
-        outState.putFloat(USER_RATING_EXTRA, userRating);
-        outState.putString(RELEASE_DATE_EXTRA, releaseDate);
+        outState.putInt(MovieListItem.MOVIE_ID, movieID);
+        outState.putString(MovieListItem.ORIGINAL_TITLE, title);
+        if (posterLocation != null) outState.putString(MovieListItem.POSTER, posterLocation);
+        else outState.putString(MovieListItem.POSTER_PATH, posterURL);
+        outState.putString(MovieListItem.OVERVIEW, plotSummary);
+        outState.putFloat(MovieListItem.VOTE_AVERAGE, userRating);
+        outState.putString(MovieListItem.RELEASE_DATE, releaseDate);
         super.onSaveInstanceState(outState);
     }
 }

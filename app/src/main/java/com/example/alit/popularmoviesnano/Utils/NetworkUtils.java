@@ -1,8 +1,9 @@
-package com.example.alit.popularmoviesnano.NetworkUtils;
+package com.example.alit.popularmoviesnano.Utils;
 
 import android.content.res.Resources;
 import android.net.Uri;
 
+import com.example.alit.popularmoviesnano.MyDatastructures.MovieListItem;
 import com.example.alit.popularmoviesnano.MyDatastructures.ReviewsListItem;
 import com.example.alit.popularmoviesnano.MyDatastructures.TrailersListItem;
 import com.example.alit.popularmoviesnano.R;
@@ -99,6 +100,36 @@ public class NetworkUtils {
 
     public static String getPosterBaseUrl() {
         return posterBaseUrl;
+    }
+
+    public static ArrayList<MovieListItem> getMovieItemList(String JSONString) {
+
+        ArrayList<MovieListItem> movieListItems = new ArrayList<>();
+
+        try {
+            JSONObject jsonObject = new JSONObject(JSONString);
+            JSONArray results = jsonObject.getJSONArray(NetworkUtils.JSON_RESULTS);
+
+            for (int i = 0; i < results.length(); i++) {
+
+                JSONObject movie = (JSONObject) results.get(i);
+
+                int movieID = Integer.parseInt(movie.getString(MovieListItem.MOVIE_ID));
+                String title = movie.getString(MovieListItem.ORIGINAL_TITLE);
+                String posterURL = movie.getString(MovieListItem.POSTER_PATH);
+                String plotSummary = movie.getString(MovieListItem.OVERVIEW);
+                float userRating = Float.parseFloat(movie.getString(MovieListItem.VOTE_AVERAGE));
+                String releaseDate = movie.getString(MovieListItem.RELEASE_DATE);
+
+                movieListItems.add(new MovieListItem(movieID, title, posterURL, plotSummary, userRating, releaseDate));
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return movieListItems;
+
     }
 
     public static ArrayList<TrailersListItem> getMovieTrailerList(String JSONString) {

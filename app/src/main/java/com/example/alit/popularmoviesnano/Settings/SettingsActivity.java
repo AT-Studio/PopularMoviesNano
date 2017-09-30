@@ -20,8 +20,6 @@ public class SettingsActivity extends AppCompatActivity {
         actionBar.setTitle(getResources().getString(R.string.title_activity_settings));
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-//        ButterKnife.bind(this);
-
 
     }
 

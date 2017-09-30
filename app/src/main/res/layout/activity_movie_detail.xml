@@ -45,15 +45,17 @@
                 app:cardCornerRadius="18dp"
                 app:cardBackgroundColor="@color/icons"
                 app:cardElevation="1dp"
-                android:foreground="?attr/selectableItemBackgroundBorderless"
-                android:layout_gravity="bottom|right"
+                android:layout_gravity="bottom|end"
                 android:layout_marginBottom="10dp"
-                android:layout_marginRight="10dp">
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp">
 
                 <ImageView
                     android:id="@+id/followStarIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="6dp"
                     android:layout_gravity="center"
                     android:src="@drawable/star_unchecked_24dp"/>
 
@@ -71,6 +73,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 android:layout_marginRight="56dp"
+                android:layout_marginEnd="56dp"
                 app:layout_collapseMode="pin"
                 app:contentInsetStartWithNavigation="0dp"
                 app:popupTheme="@style/AppTheme.PopupOverlay" />
